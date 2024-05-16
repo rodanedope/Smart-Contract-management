@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Hellaworks {
+    string private message;
+    address public cashman;
+    mapping(address => uint) public walletBalances;
+
+    event MessageUpdated(string newMessage);
+    event amountTransferred(address indexed from, address indexed to, uint amount);
+
+    constructor() {
+        cashman = msg.sender;
+        walletBalances[address(this)] = 5000;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == cashman, "Only the owner can perform this action.");
+        _;
+    }
+
+    function setMessage(string calldata newMessage) external onlyOwner {
+        message = newMessage;
+        emit MessageUpdated(newMessage);
+    }
+
+    function getMessage() external view returns (string memory) {
+        return message;
+    }
+
+    function available(uint amount) public view onlyOwner returns (uint) {
+        require(walletBalances[address(this)] >= amount, "Insufficient balance.");
+        return walletBalances[address(this)] - amount;
+    }
+
+    function transferamount(address to, uint amount) external onlyOwner {
+        require(walletBalances[address(this)] >= amount, "Insufficient balance.");
+        walletBalances[address(this)] -= amount;
+        walletBalances[to] += amount;
+        emit amountTransferred(address(this), to, amount);
+    }
+
+    function receiveamount(uint amount) external {
+        walletBalances[msg.sender] += amount;
+    }
+
+    function getBalance(address addr) external view returns (uint) {
+        return walletBalances[addr];
+    }
+}
